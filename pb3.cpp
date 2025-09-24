@@ -1,97 +1,24 @@
-#define F_CPU 8000000
+#define F_CPU 8000000UL
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stdint.h>
+#include <avr/interrupt.h>
 
-
-constexpr uint8_t nbEtapesPourFrequenceDonnee = 5;
-
-void delaiDynamique(double temps)
-{
-    for(uint8_t i=0; i<temps; i++)
-    {
-        _delay_ms(1);
-    }
-}
-
-
-void tournerRoue(double& dureeOn, bool directionRoue)
-{
-    if (dureeOn >0)
-    {
-        if (directionRoue == true)
-        {    
-            PORTB |= (1 << PB0);
-            PORTB |= (1 << PB1);
-        }
-        else
-        {
-            PORTB |= (1 << PB0);
-            PORTB &= ~(1 << PB1);
-        }
-    }
-}
-
-void changerDuree(double& dureeOn, double& dureeOff, double variation)
-{
-    dureeOn += variation;
-    dureeOff -= variation;
-}
-
-void eteint()
-{
-    PORTB &= ~(1<< PB0);
-    PORTB &= ~(1<< PB1);
-}
-
-void etapesControleRoueRobot(uint16_t repetitonDePeriode, double tempsEleve, double tempsBas, double variation, bool directionRoue)
-{
-    for (uint8_t i=0; i < nbEtapesPourFrequenceDonnee; i++)
-    {
-        for (uint16_t j=0; j < repetitonDePeriode; j++)
-        {
-            tournerRoue(tempsEleve, directionRoue);
-            delaiDynamique(tempsEleve);
-            eteint();
-            delaiDynamique(tempsBas);
-        }
-
-        changerDuree(tempsEleve, tempsBas, variation);
-    } 
-}
-
-
-void ajustementPwm ( uint16_t duree) {
-
-    // mise à un des sorties OC1A et OC1B sur comparaison
-
-    // réussie en mode PWM 8 bits, phase correcte
-
-    // et valeur de TOP fixe à 0xFF (mode #1 de la table 16-5
-
-    // page 130 de la description technique du ATmega324PA)
-
-    OCR1A = duree ;
-
-    OCR1B = duree ;
-
-
-    // division d'horloge par 8 - implique une fréquence de PWM fixe
-
-    TCCR1A =0;
-
-    TCCR1B |= (1 << CS02);
-
+void ajustementPWM (int duree) {
+    OCR1A = duree;
+    OCR1B = duree;
+    TCCR1A |= (1 << COM0A1) | (1 << COM0B1) | (1 << WGM10);
+    TCCR1B = (1<<CS01) ;
     TCCR1C = 0;
-
 }
 
-int main()
-{
-    
-    
+int main(){
+    DDRD |= (1<<PD4)|(1<<PD3);
+    DDRD |= (1<<PD5);
+    DDRA |= (1<<PD2);
+    int valeurActivationPWM[5] = {0,64,128,191,255};
+    for(int i=0;i<5;i++){
+        ajustementPWM (valeurActivationPWM[i]);
+        _delay_ms(2000);
+    }  
     return 0;
 }
-
-
-
