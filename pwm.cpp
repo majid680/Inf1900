@@ -44,16 +44,3 @@ void PwmTimer1::stop(){
 
 
 
-//Timer 0
-
-
-void PwmTimer0::setPwm(){}
-
-
-void PwmTimer0::setFrequency(){}
-
-
-void PwmTimer0::setOnRatio(){}
-
-
-void PwmTimer0::stop(){}

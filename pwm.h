@@ -15,6 +15,7 @@
 #pragma once
 #include <avr/io.h>
 
+
 //only with timer1 on OC1A for now***********
 
 class PwmTimer1{
@@ -40,26 +41,3 @@ class PwmTimer1{
 
 };
 
-class PwmTimer0{
-
-    private:
-    static const uint8_t prescaler8;           //might need different prescalers
-    static const uint8_t cyclePerPeriod = 2;
-    static const uint8_t maxRatio = 100;
-    static uint16_t top;
-    static uint8_t ratio;
-
-
-    public:
-
-    static void setPwm(); //OC0A on PB3, OC0B on PB4 -> i think this one might kill the robot
-
-    static void setFrequency();
-
-    static void setOnRatio(); // ratio (%) of time on  vs time off
-
-    static void stop();
-
-
-
-};
