@@ -15,11 +15,11 @@
 #                Majid Khauly   (2434522)        #
 #                                                #
 #                                                #
-#         Makefile de la librairie du tp7        #
+#         Makefile de l'executable tp7           #
 #                                                #
 #                                                #
 ##################################################
-#
+
 # Ce Makefile vous permet de compiler des projets
 # pour les microcontroleurs Atmel AVR sur
 # Linux ou Unix, en utilisant l'outil AVR-GCC.
@@ -35,7 +35,7 @@ MCU=atmega324pa
 
 # Nom de votre projet
 # (utilisez un seul mot, exemple: 'monprojet')
-PROJECTNAME=staticLibrary
+PROJECTNAME=exec
 
 # Fichiers sources
 # Utilisez le suffixe .cpp pour les fichiers C++
@@ -44,14 +44,19 @@ PROJECTNAME=staticLibrary
 PRJSRC=$(wildcard *.cpp)
 
 # Inclusions additionnels (ex: -I/path/to/mydir)
-INC=
+INC=-I../lib
 
 # Libraires a lier (ex: -lmylib)
-LIBS=
+LIBS=-L../lib  -l:staticLibrary.a
 
 # Niveau d'optimization
 # Utilisez s (size opt), 1, 2, 3 ou 0 (off)
 OPTLEVEL=s
+
+# Programmer ID - Ne pas changer
+# Liste complete des IDs disponible avec avrdude
+AVRDUDE_PROGRAMMERID=usbasp
+
 
 
 ####################################################
@@ -69,9 +74,14 @@ OPTLEVEL=s
 
 #compilateur utilise
 CC=avr-gcc
-
+#pour copier le contenu d'un fichier objet vers un autre
+OBJCOPY=avr-objcopy
+#pour permettre le transfert vers le microcontroleur
+AVRDUDE=avrdude
 #pour supprimer les fichiers lorsque l'on appel make clean
 REMOVE=rm -f
+# HEXFORMAT -- format pour les fichiers produient .hex
+HEXFORMAT=ihex
 
 
 
@@ -85,11 +95,31 @@ CFLAGS=-I. -I/usr/include/simavr -MMD $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 # array bounds" sur avr-gcc v12
 GCCVERSION := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 12)
 ifeq "$(GCCVERSION)" "1"
-    CFLAGS += --param=min-pagesize=0
+	CFLAGS += --param=min-pagesize=0
 endif
 
 # Flags pour le compilateur en C++
 CXXFLAGS=-fno-exceptions
+
+# Linker pour lier les librairies utilisees
+LDFLAGS=-Wl,-Map,$(TRG).map -mmcu=$(MCU)
+
+ifdef DEBUG
+    CFLAGS += -DDEBUG
+endif
+
+ifdef WRITE_PROGRAM
+	CFLAGS += -DWRITE_PROGRAM
+endif
+
+####### Cible (Target) #######
+
+#Nom des cibles par defaut
+TRG=$(PROJECTNAME).elf
+HEXROMTRG=$(PROJECTNAME).hex
+HEXTRG=$(HEXROMTRG) $(PROJECTNAME).ee.hex
+
+
 
 ####### Definition de tout les fichiers objets #######
 
@@ -117,19 +147,21 @@ $(CPPFILES:.cpp=.o)
 # En plus de la commande make qui permet de compiler
 # votre projet, vous pouvez utilisez les commandes
 # make all, make install et make clean
-.PHONY: all clean
+.PHONY: all install clean
 
 # Make all permet simplement de compiler le projet
 #
-all: $(PROJECTNAME).a
+all: $(TRG) $(HEXROMTRG)
 
-
+# Implementation de la cible
+$(TRG): $(OBJDEPS) ../lib/staticLibrary.a
+	$(CC) $(LDFLAGS) -o $(TRG) $(OBJDEPS) \
+	-lm $(LIBS)
 
 # Production des fichiers object
 # De C a objet
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
-
 # De C++ a objet
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(CXXFLAGS) -c $<
@@ -140,18 +172,33 @@ all: $(PROJECTNAME).a
 # Pour plus d'information sur cette section, consulter:
 # http://bit.ly/2580FU8
 
+# Production des fichiers hex a partir des fichiers elf
+%.hex: %.elf
+	$(OBJCOPY) -j .text -j .data -O $(HEXFORMAT) $< $@
 
-
-$(PROJECTNAME).a: $(OBJDEPS)
-	avr-ar crs $@ $^
-
+# Make install permet de compiler le projet puis
+# d'ecrire le programme en memoire flash dans votre
+# microcontroleur. Celui-ci doit etre branche par cable USB
+install: $(HEXROMTRG)
+	$(AVRDUDE) -c $(AVRDUDE_PROGRAMMERID) \
+	-p $(MCU) -P usb -e -U flash:w:$(HEXROMTRG)
 
 
 # Make clean permet d'effacer tout les fichiers generes
 # lors de la compilation
 clean:
-	$(REMOVE) $(OBJDEPS) *.d *.a
+	$(REMOVE) $(TRG) $(TRG).map $(OBJDEPS) $(HEXTRG) *.d
 
+
+debug:
+	$(MAKE) clean all DEBUG=1
+	$(MAKE) install DEBUG=1
+	    serieViaUSB -l 
+
+write:
+	$(MAKE) clean all WRITE_PROGRAM=1
+	$(MAKE) install WRITE_PROGRAM=1
+	    serieViaUSB/serieViaUSB -e -f instructionFile.bin
 # Pour plus d'information sur les phony target, consulter:
 # http://bit.ly/1WBQe61
 
