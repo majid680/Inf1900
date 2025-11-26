@@ -19,7 +19,7 @@
 
 #ifdef DEBUG
 
-# define DEBUG_PRINT(x) SerialCommunication::readFlash(x) // ou par RS-232
+# define DEBUG_PRINT(x) SerialCommunication::readViaUART(x) // ou par RS-232
 
 #else
 

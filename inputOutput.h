@@ -7,7 +7,7 @@
 #                Majid Khauly   (2434522)        #
 #                                                #
 #                                                #
-#                  delay class                   #
+#              InputOutput class                 #
 #                                                #
 #                                                #
 ################################################*/
@@ -15,11 +15,15 @@
 #pragma once
 #include <avr/io.h>
 
-class Delay{
+class InputOutput{
     public:
-        static void dynamicDelay(uint16_t time); //in milliseconds (can wait a max of approx. 65 seconds)
+        static void setInput(volatile uint8_t* port, uint8_t pin);
+        static void setOutput(volatile uint8_t* port, uint8_t pin);
+        static void setOutput(volatile uint8_t* port, uint8_t pin1, uint8_t pin2);
+        static void outputValue1(volatile uint8_t* port, uint8_t pin);
+        static void outputValue0(volatile uint8_t* port, uint8_t pin);
+        static bool readInput(volatile uint8_t* port, uint8_t pin);
 
     private:
-        static const uint8_t DEFAULT_DELAY_VALUE =1;
-        Delay() = delete;
+        InputOutput() = delete;
 };

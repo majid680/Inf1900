@@ -23,33 +23,43 @@
 
 enum class Direction{forward, backward};
 
+
+
 class Motor{
+    public:
+        static void setMotor(); //OC2A on PD7 and OC2B on PD6
+        static void bothWheels(uint8_t power, Direction direction, bool isCorrected = false); //power : from 0 to 100% and direction : Direction::foward or Direction::backward
+        static void leftWheel(uint8_t power, Direction direction); 
+        static void rightWheel(uint8_t power, Direction direction);
+
+        static void turnForward(uint8_t leftPower, uint8_t rightPower, bool boost = false);
+
+        static void turnRight(uint8_t power = MAX_POWER);  
+        static void turnLeft(uint8_t power = MAX_POWER);   
+
+        static void turnRightWithDegree(uint16_t time);
+        static void turnLeftWithDegree(uint16_t time);
+
+        static void stop();
+
+
 
     private:
-    Motor() = delete;
+        static const uint8_t leftCorrectionValue = 2;   //reduce right drifting
+        static const uint8_t rightCorrectionValue = 7;  //reduce left drifting     (about 7% with a leftCorrectionValue of 2)
+        static bool isStopped;
+        static const uint8_t MAX_POWER = 100;
+        static const uint8_t USED_SPEED = 45;
+        static const uint8_t TIMER_TOP = 255;
+        static const uint16_t TIME_TO_TURN90 = 1500; 
+        static const uint16_t TIME_TO_TURN30 = 485; 
+        static const uint16_t TIME_TO_TURN15 = 200; 
+        static const uint16_t TIME_TO_TURN45 = 700;  
 
-    static const uint8_t maxPower = 100;
+        static void stopLeft();
+        static void stopRight();
+        static uint8_t setPower(uint8_t power);
 
-    static const uint8_t timerTop = 255;
-
-
-    static uint8_t setPower(uint8_t power);
-
-    public:
-
-    static void setMotor(); //OC2A on PD7 and OC2B on PD6
-           
-
-    static void leftWheel(uint8_t power, Direction direction); //power : from 0 to 100% and direction : Direction::foward or Direction::backward
-    static void rightWheel(uint8_t power, Direction direction);
-    static void bothWheels(uint8_t power, Direction direction);
-
-    static void turnRight();  //team 32s robot needs ?? ms to turn 90 left and ?? ms to turn 90 right
-    static void turnLeft();   //team 42s robot needs ?? ms to turn 90 left and ?? ms to turn 90 right
-
-    static void stopLeft();
-    static void stopRight();
-    static void stop();
-
+        Motor() = delete;
 
 };

@@ -5,5 +5,5 @@
 
 void Delay::dynamicDelay(uint16_t time){
     for (uint16_t i = 0; i < time; i++)
-        _delay_ms(1);
+        _delay_ms(DEFAULT_DELAY_VALUE);  
 }

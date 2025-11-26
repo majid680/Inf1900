@@ -18,15 +18,20 @@
 #include <stdio.h>
 
 class SerialCommunication
-{
-    private:
-        SerialCommunication() = delete;
-        static void transmissionUART(uint8_t value);
-        static const uint8_t maxSizeBuffer = 16;
-        static const uint8_t base10 = 10;
-        static const uint16_t baud = 0xCF;
+{    
     public:
         static void initializationUART();
-        static void readFlash(const char* display); //For strings
-        static void readFlash(uint16_t display); //For numbers
+        static void readViaUART(const char* display); //For strings
+        static void readViaUART(uint16_t display); //For numbers
+        static void readViaUART(const char* display, uint8_t size); //To read a specific size from a char array (not null-terminated \0)
+        
+        static uint8_t receiveUART();
+
+    private:
+        static const uint8_t MAX_SIZE_BUFFER = 16;
+        static const uint8_t BASE_10 = 10;
+        static const uint16_t BAUD = 0xCF;
+        
+        SerialCommunication() = delete;
+        static void transmissionUART(uint8_t value);
 };

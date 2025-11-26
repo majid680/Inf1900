@@ -3,10 +3,11 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "timer.h"
-#include "initialization.h"
+#include "inputOutput.h"
 
 ValuePrescaler Timer1::prescaler = ValuePrescaler::div8;
-uint32_t Timer1::timerCounter = 0;
+volatile uint32_t Timer1::timerCounter = 0;
+
 
 
 void Timer1::setPrescaler(ValuePrescaler valuePrescaler){
@@ -33,11 +34,11 @@ void Timer1::setPrescaler(ValuePrescaler valuePrescaler){
 
 void Timer1::findPrescaler(uint16_t time)
 {
-    if (time <= maxTimeForPrescaler8)
+    if (time <= MAX_TIME_PRESCALER8)
         setPrescaler(ValuePrescaler::div8);
-    else if (time <= maxTimeForPrescaler64)
+    else if (time <= MAX_TIME_PRESCALER64)
         setPrescaler(ValuePrescaler::div64);
-    else if (time <= maxTimeForPrescaler256)
+    else if (time <= MAX_TIME_PRESCALER256)
         setPrescaler(ValuePrescaler::div256);
     else
         setPrescaler(ValuePrescaler::div1024);
@@ -54,14 +55,14 @@ void Timer1::startCounter(uint16_t time){
 
     findPrescaler(time);
 
-    // TODO: find the right value for OCR1A depending on the value of the chosen prescaler and the time in ms
     uint32_t prescalerValue = static_cast<uint16_t>(prescaler);
-    uint32_t OCR1Avalue = (F_CPU * time) / (prescalerValue * secondInMs) - 1;
-    if (OCR1Avalue > maxOCR1A)
-        OCR1Avalue = maxOCR1A;
+    uint32_t OCR1Avalue = (F_CPU * time) / (prescalerValue * SECOND_IN_MS) - 1;
+    if (OCR1Avalue > MAX_OCR1A)
+        OCR1Avalue = MAX_OCR1A;
     OCR1A = OCR1Avalue;
 
     TIMSK1 |= (1 << OCIE1A);
+    resetTimerCounter();
     sei();
 }
 
@@ -116,39 +117,37 @@ void Timer0::setPrescaler(ValuePrescaler valuePrescaler){
 
 void Timer0::findPrescaler(uint32_t frequency)
 {
-    if (frequency >= minFrequencyForPrescaler1)
+    if (frequency >= MIN_FREQ_PRESCALER1)
         setPrescaler(ValuePrescaler::div1);
-    else if (frequency >= minFrequencyForPrescaler8)
+    else if (frequency >= MIN_FREQ_PRESCALER8)
         setPrescaler(ValuePrescaler::div8);
-    else if (frequency >= minFrequencyForPrescaler64)
+    else if (frequency >= MIN_FREQ_PRESCALER64)
         setPrescaler(ValuePrescaler::div64);
-    else if (frequency >= minFrequencyForPrescaler256)
+    else if (frequency >= MIN_FREQ_PRESCALER256)
         setPrescaler(ValuePrescaler::div256);
     else
         setPrescaler(ValuePrescaler::div1024);
 }
 
 
-void Timer0::changeFrequency(uint32_t frequency){
+void Timer0::setFrequency(uint32_t frequency){
     findPrescaler(frequency);
-
-    uint32_t OCR0Avalue = (F_CPU / (static_cast<uint16_t>(prescaler) * frequency * cyclePerPeriod)) - 1;
-    if (OCR0Avalue > maxOCR0A)
-        OCR0Avalue = maxOCR0A;
+    TCCR0A |= (1 << COM0A0);
+    uint32_t OCR0Avalue = (F_CPU / (static_cast<uint16_t>(prescaler) * frequency * CYCLE_PER_PERIOD)) - 1;
+    if (OCR0Avalue > MAX_OCR0A)
+        OCR0Avalue = MAX_OCR0A;
     OCR0A = OCR0Avalue;
 }
 
-void Timer0::startTimer(uint32_t frequency){
-    TCCR0A |= (1 << WGM01) | (1 << COM0A0); //setting CTC mode, toggle OC0A on compare match
-    Initialization::setOutput(&PORTB, PB3); //OC0A on PB3
-
-    changeFrequency(frequency);
+void Timer0::initializationTimer(){
+    TCCR0A |= (1 << WGM01); //setting CTC mode, toggle OC0A on compare match, but doesnt initiate the output yet
+    InputOutput::setOutput(&PORTB, PB3); //OC0A on PB3
 }
 
 void Timer0::stopTimer(){
-    TCCR0B &= ~((1 << CS00) | (1 << CS01) | (1 << CS02));
+    TCCR0A &= ~(1 << COM0A0); //disconnecting OC0A pin
 }
 
 void Timer0::resumeTimer(){
-    setPrescaler(prescaler);
+    TCCR0A |= (1 << COM0A0); //reconnecting OC0A pin
 }

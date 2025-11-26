@@ -7,19 +7,29 @@
 #                Majid Khauly   (2434522)        #
 #                                                #
 #                                                #
-#                  delay class                   #
+#                 sound class                    #
 #                                                #
 #                                                #
 ################################################*/
 
 #pragma once
 #include <avr/io.h>
+#include "timer.h"
+#include "inputOutput.h"
 
-class Delay{
+
+class Sound{
     public:
-        static void dynamicDelay(uint16_t time); //in milliseconds (can wait a max of approx. 65 seconds)
-
+        static void initializeSound();
+        static void generateMidiTone(uint8_t key); //frequency in Hz and duration in ms
+        static void generateTone(uint16_t frequency);
+        static void stopTone();
+        
     private:
-        static const uint8_t DEFAULT_DELAY_VALUE =1;
-        Delay() = delete;
+        static const uint16_t frequencies[37];
+
+    Sound() = delete;
+
+    
 };
+

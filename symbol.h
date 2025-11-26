@@ -7,19 +7,42 @@
 #                Majid Khauly   (2434522)        #
 #                                                #
 #                                                #
-#                  delay class                   #
+#                    Symbols                     #
 #                                                #
 #                                                #
 ################################################*/
-
 #pragma once
 #include <avr/io.h>
+#include "sensors.h"
+#include "led.h"
 
-class Delay{
-    public:
-        static void dynamicDelay(uint16_t time); //in milliseconds (can wait a max of approx. 65 seconds)
+enum class SensorState
+{
+    WAIT_WHITE,
+    WAIT_LINE,
+    END
+};
 
-    private:
-        static const uint8_t DEFAULT_DELAY_VALUE =1;
-        Delay() = delete;
+enum class DetectedSymbol {
+    PIEZO,
+    LED,
+    MOTOR,
+    SWITCH,
+    ERROR  
+};
+
+class Symbol
+{
+public:
+    static void findMatchingBlackSymbol();
+
+private:
+    static DetectedSymbol lastVisitedSymbol;
+    
+    static void storeSymbol();
+    static void identifySymbol(uint16_t time);
+
+    static SensorState sensorsState;
+
+   
 };

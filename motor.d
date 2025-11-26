@@ -1,1 +1,1 @@
-motor.o: motor.cpp motor.h initialization.h
+motor.o: motor.cpp motor.h inputOutput.h delay.h

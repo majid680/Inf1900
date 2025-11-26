@@ -2,7 +2,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "pwm.h"
-#include "initialization.h"
+#include "inputOutput.h"
 
 //on timer 1
 
@@ -10,7 +10,7 @@ uint16_t PwmTimer1::top = 0;
 uint8_t  PwmTimer1::ratio = 0;  
 
 void PwmTimer1::setPwm(uint16_t frequency){   //frequency in Hz (1000 by default)
-    Initialization::setOutput(&PORTD, PD5);
+    InputOutput::setOutput(&PORTD, PD5);
 
     TCCR1A = 0;
     TCCR1B = 0;  //to clear the registers
@@ -26,21 +26,19 @@ void PwmTimer1::setPwm(uint16_t frequency){   //frequency in Hz (1000 by default
 }
 
 void PwmTimer1::setFrequency(uint16_t frequency){
-    top = 8000000UL / (prescaler8 * cyclePerPeriod * frequency);     //with prescaler = 8, f = F_CPU / (8 * 2 * top) -> top = F_CPU / (8 * 2 * f)
+    top = F_CPU / (PRESCALER_8 * CYCLE_PER_PERIOD * frequency);     //with prescaler = 8, f = F_CPU / (8 * 2 * top) -> top = F_CPU / (8 * 2 * f)
     ICR1 = top;
     setOnRatio(ratio); //to get the good OCR1A value for the new top
 }
 
 void PwmTimer1::setOnRatio(uint8_t ratio){
-    if (ratio > maxRatio) 
-        ratio = maxRatio;
-    OCR1A = (ratio * top) / maxRatio;  
+    if (ratio > MAX_RATIO) 
+        ratio = MAX_RATIO;
+    OCR1A = (ratio * top) / MAX_RATIO;  
     PwmTimer1::ratio = ratio;  
 }
 
 void PwmTimer1::stop(){
     OCR1A = 0;
 }
-
-
 

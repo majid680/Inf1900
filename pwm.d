@@ -1,1 +1,1 @@
-pwm.o: pwm.cpp pwm.h initialization.h
+pwm.o: pwm.cpp pwm.h inputOutput.h

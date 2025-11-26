@@ -1,1 +1,1 @@
-timer.o: timer.cpp timer.h initialization.h
+timer.o: timer.cpp timer.h inputOutput.h
